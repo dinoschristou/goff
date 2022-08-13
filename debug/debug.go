@@ -12,7 +12,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/Forestmb/goff"
+	"github.com/goff"
 	"golang.org/x/oauth2"
 )
 

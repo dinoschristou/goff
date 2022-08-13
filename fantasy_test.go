@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	lru "github.com/youtube/vitess/go/cache"
+	lru "vitess.io/vitess/go/cache"
 )
 
 //
