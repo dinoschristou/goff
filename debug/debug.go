@@ -12,7 +12,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/goff"
+	"github.com/dinoschristou/goff"
 	"golang.org/x/oauth2"
 )
 
