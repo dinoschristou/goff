@@ -22,4 +22,3 @@ require (
 	vitess.io/vitess v0.14.1
 )
 
-retract v0.5.0
