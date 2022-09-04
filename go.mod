@@ -21,3 +21,5 @@ require (
 	google.golang.org/protobuf v1.28.1 // indirect
 	vitess.io/vitess v0.14.1
 )
+
+retract v0.5.0
