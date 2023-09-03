@@ -22,3 +22,5 @@ _testmain.go
 *.exe
 profile.cov
 debug/debug
+
+.vscode/*

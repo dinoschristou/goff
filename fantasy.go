@@ -92,6 +92,7 @@ var ErrAccessDenied = errors.New(
 // fantasy football game for that year.
 var YearKeys = map[string]string{
 	"nfl":  NflGameKey,
+	"2023": "423",
 	"2022": "414",
 	"2021": "406",
 	"2020": "399",
@@ -260,10 +261,31 @@ type Team struct {
 
 // Settings describes how a league is configured
 type Settings struct {
-	DraftType        string `xml:"draft_type"`
-	ScoringType      string `xml:"scoring_type"`
-	UsesPlayoff      bool   `xml:"uses_playoff"`
-	PlayoffStartWeek int    `xml:"playoff_start_week"`
+	DraftType        string           `xml:"draft_type"`
+	ScoringType      string           `xml:"scoring_type"`
+	UsesPlayoff      bool             `xml:"uses_playoff"`
+	PlayoffStartWeek int              `xml:"playoff_start_week"`
+	RosterPositions  []RosterPosition `xml:"roster_positions>roster_position"`
+	StatCategories   []StatCategory   `xml:"stat_categories>stats>stat"`
+	StatModifiers    []StatModifier   `xml:"stat_modifiers>stats>stat"`
+}
+
+type RosterPosition struct {
+	Position string `xml:"position"`
+	Count    int    `xml:"count"`
+}
+
+type StatCategory struct {
+	StatID       int    `xml:"stat_id"`
+	Enabled      bool   `xml:"enabled"`
+	Name         string `xml:"name"`
+	DisplayName  string `xml:"display_name"`
+	PositionType string `xml:"position_type"`
+}
+
+type StatModifier struct {
+	StatID int     `xml:"stat_id"`
+	Value  float64 `xml:"value"`
 }
 
 // Scoreboard represents the matchups that occurred for one or more weeks.
@@ -329,13 +351,33 @@ type TeamLogo struct {
 
 // A Player is a single player for the given sport.
 type Player struct {
-	PlayerKey          string           `xml:"player_key"`
-	PlayerID           uint64           `xml:"player_id"`
-	Name               Name             `xml:"name"`
-	DisplayPosition    string           `xml:"display_position"`
-	ElligiblePositions []string         `xml:"elligible_positions>position"`
-	SelectedPosition   SelectedPosition `xml:"selected_position"`
-	PlayerPoints       Points           `xml:"player_points"`
+	PlayerKey             string           `xml:"player_key"`
+	PlayerID              uint64           `xml:"player_id"`
+	Name                  Name             `xml:"name"`
+	DisplayPosition       string           `xml:"display_position"`
+	EligiblePositions     []string         `xml:"eligible_positions>position"`
+	SelectedPosition      SelectedPosition `xml:"selected_position"`
+	PlayerPoints          Points           `xml:"player_points"`
+	Status                string           `xml:"status"`
+	EditorialPlayerKey    string           `xml:"editorial_player_key"`
+	EditorialTeamKey      string           `xml:"editorial_team_key"`
+	EditorialTeamFullName string           `xml:"editorial_team_full_name"`
+	EditorialTeamAbbr     string           `xml:"editorial_team_abbr"`
+	UniformNumber         int              `xml:"uniform_number"`
+	ByeWeeks              []string         `xml:"bye_weeks>week"`
+	PlayerStats           PlayerStats      `xml:"player_stats"`
+}
+
+type PlayerStats struct {
+	CoverageType string `xml:"coverage_type"`
+	Season       string `xml:"season"`
+	Week         int    `xml:"week"`
+	Stats        []Stat `xml:"stats>stat"`
+}
+
+type Stat struct {
+	StatID string `xml:"stat_id"`
+	Value  string `xml:"value"`
 }
 
 // SelectedPosition is the position chosen for a Player for a given week.
@@ -712,6 +754,35 @@ func (c *Client) GetLeagueStandings(leagueKey string) (*League, error) {
 	return &content.League, nil
 }
 
+// GetAllPlayers gets all the players in the league
+func (c *Client) GetAllPlayers(leagueKey string) ([]Player, error) {
+	var players = []Player{}
+
+	start := 0
+	window := 25
+	retCount := 25
+
+	for retCount == window {
+
+		fmt.Printf("Getting next %v players from position %v\n", window, start)
+
+		content, err := c.GetFantasyContent(
+			fmt.Sprintf("%s/league/%s/players;start=%v;count=%v;out=stats",
+				YahooBaseURL,
+				leagueKey,
+				start,
+				window))
+		if err != nil {
+			return nil, err
+		}
+		retCount = len(content.League.Players)
+		players = append(players, content.League.Players...)
+		start += window
+	}
+
+	return players, nil
+}
+
 // GetAllTeamStats gets teams stats for a given week.
 func (c *Client) GetAllTeamStats(leagueKey string, week int) ([]Team, error) {
 	content, err := c.GetFantasyContent(
@@ -745,7 +816,7 @@ func (c *Client) GetTeam(teamKey string) (*Team, error) {
 // GetLeagueMetadata returns the metadata associated with the given league.
 func (c *Client) GetLeagueMetadata(leagueKey string) (*League, error) {
 	content, err := c.GetFantasyContent(
-		fmt.Sprintf("%s/league/%s/metadata",
+		fmt.Sprintf("%s/league/%s;out=metadata,settings",
 			YahooBaseURL,
 			leagueKey))
 	if err != nil {
