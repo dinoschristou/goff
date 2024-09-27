@@ -765,6 +765,19 @@ func (c *Client) GetLeagueStandings(leagueKey string) (*League, error) {
 	return &content.League, nil
 }
 
+// GetLeagueStandingsForWeek gets a league containing the standings for a given week
+func (c *Client) GetLeagueStandingsForWeek(leagueKey string, week int) (*League, error) {
+	content, err := c.GetFantasyContent(
+		fmt.Sprintf("%s/league/%s/standings;type=week;week=%d",
+			YahooBaseURL,
+			leagueKey,
+			week))
+	if err != nil {
+		return nil, err
+	}
+	return &content.League, nil
+}
+
 // GetAllPlayers gets all the players in the league
 func (c *Client) GetAllPlayers(leagueKey string) ([]Player, error) {
 	var players = []Player{}
