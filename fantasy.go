@@ -92,6 +92,7 @@ var ErrAccessDenied = errors.New(
 // fantasy football game for that year.
 var YearKeys = map[string]string{
 	"nfl":  NflGameKey,
+	"2025": "461",
 	"2024": "449",
 	"2023": "423",
 	"2022": "414",
@@ -219,6 +220,7 @@ type FantasyContent struct {
 	League  League   `xml:"league"`
 	Team    Team     `xml:"team"`
 	Users   []User   `xml:"users>user"`
+	Games   []Game   `xml:"games>game"`
 }
 
 // User contains the games a user is participating in
@@ -229,6 +231,11 @@ type User struct {
 // Game represents a single year in the Yahoo fantasy football ecosystem. It consists
 // of zero or more leagues.
 type Game struct {
+	GameKey string   `xml:"game_key"`
+	GameID  uint64   `xml:"game_id"`
+	Name    string   `xml:"name"`
+	Code    string   `xml:"code"`
+	Type    string   `xml:"type"`
 	Leagues []League `xml:"leagues>league"`
 }
 
